@@ -47,6 +47,36 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _read_body(self):
+        length = int(self.headers.get("Content-Length", 0))
+        return self.rfile.read(length) if length else b""
+
+    def do_POST(self):
+        parsed = urlparse(self.path)
+        if parsed.path == "/api/log":
+            if not self._check_api_key():
+                self._send_json({"error": "unauthorized"}, 401)
+                return
+            try:
+                data = json.loads(self._read_body())
+                ts = data.get("ts", datetime.now().isoformat())
+                conn = sqlite3.connect(DB)
+                conn.execute(
+                    "INSERT INTO visits (ts,ip,ua,lang,method,path,query,headers) VALUES (?,?,?,?,?,?,?,?)",
+                    (ts, data.get("ip",""), data.get("ua",""), data.get("lang",""),
+                     data.get("method","GET"), data.get("path","/"),
+                     data.get("query",""), json.dumps(data.get("headers",{}))))
+                conn.commit()
+                conn.close()
+                print(json.dumps({"ts": ts, "ip": data.get("ip",""), "ua": (data.get("ua",""))[:60],
+                      "method": data.get("method","GET"), "path": data.get("path","/"), "src": "cf-pages"},
+                      ensure_ascii=False), flush=True)
+                self._send_json({"ok": True})
+            except Exception as e:
+                self._send_json({"error": str(e)}, 400)
+            return
+        self.do_GET()
+
     def do_GET(self):
         parsed = urlparse(self.path)
         path = parsed.path
@@ -94,7 +124,6 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     do_HEAD = do_GET
-    do_POST = do_GET
 
     def log_message(self, *a):
         pass

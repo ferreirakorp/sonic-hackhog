@@ -1,0 +1,12 @@
+# Copy to wrangler.toml and fill in your KV namespace ID.
+# Create one with: npx wrangler kv namespace create OG_STATE
+
+name = "sonic-redirect"
+pages_build_output_dir = "./public"
+compatibility_date = "2024-09-01"
+
+# KV binding for daily OG timestamp persistence.
+# Without this the OG title still works but regenerates on every request.
+[[kv_namespaces]]
+binding = "OG_STATE"
+id = "YOUR_KV_NAMESPACE_ID"

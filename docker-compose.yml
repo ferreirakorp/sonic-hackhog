@@ -1,0 +1,25 @@
+services:
+  redirect:
+    image: python:3.12-slim
+    container_name: fk-redirect
+    restart: unless-stopped
+    working_dir: /opt/redirect
+    volumes:
+      - ./data:/opt/redirect
+      - ./server.py:/opt/redirect/server.py:ro
+    environment:
+      - REDIRECT_URL=${REDIRECT_URL:-https://wise.com/}
+      - API_KEY=${API_KEY}
+      - PORT=8099
+      - DB_PATH=/opt/redirect/visits.db
+    command: python3 server.py
+    ports:
+      - "127.0.0.1:8099:8099"
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: fk-redirect-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}

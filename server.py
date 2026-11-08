@@ -17,6 +17,9 @@ def init_db():
         ts TEXT, ip TEXT, ua TEXT, lang TEXT, method TEXT,
         path TEXT, query TEXT, headers TEXT
     )""")
+    cols = [r[1] for r in conn.execute("PRAGMA table_info(visits)").fetchall()]
+    if "method" not in cols:
+        conn.execute("ALTER TABLE visits ADD COLUMN method TEXT DEFAULT 'GET'")
     conn.commit()
     conn.close()
 

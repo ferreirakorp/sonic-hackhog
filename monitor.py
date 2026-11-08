@@ -26,9 +26,13 @@ except ImportError:
     print("[!] Install rich: pip install rich")
     sys.exit(1)
 
-# Force green terminal on Windows
+# Force UTF-8 + green terminal on Windows
 if sys.platform == "win32":
     os.environ["PYTHONIOENCODING"] = "utf-8"
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
     os.system("color 0A")
     sys.stdout.write("\033[0;32m\033[40m")
     sys.stdout.flush()
